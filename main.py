@@ -1,48 +1,13 @@
-import pygame
-from deck import Deck
+from game import Game
 
-"""pygame.init()
+g = Game()
 
-win = pygame.display.set_mode((1300,750))
+g.deck.shuffle()
 
-pygame.display.set_caption("Ramy")
+g.give_first_cards()
 
+#g.player1.hand.append(g.deck.give_card())
 
-exit_game = False
-while not exit_game:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            exit_game = True
+print(g.player1.hand)
 
-
-pygame.quit()
-
-"""
-
-d = Deck()
-
-d.shuffle()
-
-print(d)
-
-print(d.size())
-
-print(d.count_suit_cards(0))
-print(d.count_suit_cards(1))
-print(d.count_suit_cards(2))
-print(d.count_suit_cards(3))
-print(d.count_suit_cards(4))
-
-x = d.give_card()
-
-print("Given card: ", x)
-
-print(d)
-
-print(d.size())
-
-print(d.count_suit_cards(0))
-print(d.count_suit_cards(1))
-print(d.count_suit_cards(2))
-print(d.count_suit_cards(3))
-print(d.count_suit_cards(4))
+g.run()
