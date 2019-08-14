@@ -9,10 +9,13 @@ class Game(object):
         self.player1 = Player("Joao")
         self.player2 = Player("Diogo")
         self.deck = Deck()
-        self.pile = (-1, -1)
+        self.pile = []
         self.height = 750
         self.width = 1300
         self.win = pygame.display.set_mode((self.width, self.height))
+        self.activePlayer = self.player1
+        self.inactivePlayer = self.player2
+        self.status = (1, 0)
 
     def give_first_cards(self):
         for i in range(13):
@@ -20,30 +23,25 @@ class Game(object):
         for f in range(13):
             self.player2.hand.append(self.deck.give_card())
 
-        self.pile = self.deck.give_card()
+        self.pile.append(self.deck.give_card())
 
     def run(self):
-        status = 1
 
         pygame.init()
+        print(self.pile)
+        while self.status[0] != 0:
 
-        while status != 0:
-
-            if status == 1:
+            if self.status[0] == 1:
                 self.draw_menu()
-                status = self.menu_logic()
+                self.menu_logic()
 
-            if status == 2:
-                self.draw()
-                self.draw_player_hand()
-                status = self.game_logic()
+            if self.status[0] == 2:
+                self.draw_board()
+                self.game_logic()
 
             pygame.display.update()
 
         pygame.quit()
-
-    def draw(self):
-        self.win.fill((34, 139, 34))
 
     def draw_menu(self):
         text1 = pygame.font.SysFont(None, 25).render("PLAY", True, (0, 0, 0))
@@ -55,32 +53,102 @@ class Game(object):
         self.win.blit(text1, (630, 230))
         self.win.blit(text2, (625, 330))
 
-    def draw_player_hand(self):
+    def draw_board(self):
+        self.win.fill((34, 139, 34))
         x = 300
-        aux = self.player1.hand
+        aux = self.activePlayer.hand
+
+        name = pygame.font.SysFont(None, 50).render(self.activePlayer.name, True, (0, 0, 0))
+        self.win.blit(name, (50, 680))
 
         for i in range(len(aux)):
-            img = pygame.transform.scale(pygame.image.load(os.path.join("resources/cards", str(aux[i][0]) + "_" + str(aux[i][1]) +".png")), (125, 182))
-            self.win.blit(img, (x, 675))
+            img = pygame.transform.scale(pygame.image.load(os.path.join("resources/cards", str(aux[i][0]) + "_" + str(aux[i][1]) + ".png")), (125, 182))
+            if i == self.activePlayer.selected:
+                self.win.blit(img, (x, 655))
+            else:
+                self.win.blit(img, (x, 675))
             x = x + 50
+
+        x = 300
+
+        for i in range(len(self.inactivePlayer.hand)):
+            img = pygame.transform.scale(pygame.image.load(os.path.join("resources/cards", "back.png")), (125, 182))
+
+            self.win.blit(img, (x, -75))
+
+            x = x + 50
+
+        self.win.blit(img, (50, 300))
+
+        if len(self.pile) is not 0:
+            img = pygame.transform.scale(pygame.image.load(os.path.join("resources/cards", str(self.pile[0][0]) + "_" + str(self.pile[0][1]) + ".png")), (125, 182))
+            self.win.blit(img, (600, 300))
+
+        if self.status == (2, 1) and self.activePlayer.selected != -1:
+            text = pygame.font.SysFont(None, 25).render("Give Card", True, (0, 0, 0))
+            pygame.draw.rect(self.win, (255, 0, 0), pygame.Rect(1070, 350, 150, 75))
+            self.win.blit(text, (1105, 380))
+
 
     def menu_logic(self):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return 0
+                self.status = (0, 0)
 
             pos = pygame.mouse.get_pos()
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if 575 <= pos[0] <= 725 and 200 <= pos[1] <= 275:
-                    return 2
-
-        return 1
+                    self.status = (2, 0)
 
     def game_logic(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return 0
+                self.status = (0, 0)
 
-        return 2
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                x = 300
+                for i in range(len(self.activePlayer.hand)):
+                    if x <= pos[0] <= x + 50 and 675 <= pos[1] <= 750:
+                        print("Posicao: ", i, ": ", self.activePlayer.hand[i])
+                        if self.activePlayer.selected == -1:
+                            self.activePlayer.selected = i
+                        else:
+                            self.switch_cards(i, self.activePlayer.selected)
+                    x = x + 50
+
+                if self.status[1] == 0:
+                    if 50 <= pos[0] <= 175 and 300 <= pos[1] <= 482:
+                        self.activePlayer.hand.append(self.deck.give_card())
+                        self.status = (2, 1)
+                    if 600 <= pos[0] <= 725 and 300 <= pos[1] <= 482 and len(self.pile) is not 0:
+                        self.activePlayer.hand.append(self.pile.pop(0))
+                        self.status = (2, 1)
+
+                if self.status[1] == 1:
+                    if 1070 <= pos[0] <= 1220 and 350 <= pos[1] <= 425 and self.activePlayer.selected != -1:
+                        self.pile.insert(0, self.activePlayer.hand.pop(self.activePlayer.selected))
+                        self.activePlayer.selected = -1
+                        self.status = (2, 0)
+                        self.switch_player()
+
+    def switch_cards(self, pos1, pos2):
+        if pos1 == pos2:
+            self.activePlayer.selected = -1
+            return
+
+        aux = self.activePlayer.hand[pos1]
+
+        self.activePlayer.hand[pos1] = self.activePlayer.hand[pos2]
+
+        self.activePlayer.hand[pos2] = aux
+
+        self.activePlayer.selected = - 1
+
+    def switch_player(self):
+        aux = self.activePlayer
+
+        self.activePlayer = self.inactivePlayer
+        self.inactivePlayer = aux

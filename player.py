@@ -3,6 +3,7 @@ class Player(object):
         self.name = name
         self.points = 0
         self.hand = []
+        self.selected = -1
 
     def add_points(self, p):
         self.points += p
