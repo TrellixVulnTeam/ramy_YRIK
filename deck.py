@@ -17,7 +17,7 @@ class Deck(object):
         self.cards.clear()
         for j in range(2):
             for i in range(1, 5):
-                for f in range(1,14):
+                for f in range(1, 14):
                     self.cards.append((f, i))
         for i in range (4):
             self.cards.append((0, 0))
